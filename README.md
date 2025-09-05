@@ -4,7 +4,7 @@ An AI-powered knowledge base search application that allows users to upload docu
 
 ## Deployment Link and Video Demo
 
-- [Live App]()
+- [Live App](https://ai-knowledge-search-gules.vercel.app/)
 - [Video Demo Link](https://www.loom.com/share/89f879d537ce450a8575dfe9a36678b9?sid=457cbf63-a13e-4341-ac02-40a3d877d350)
 
 ## 🎯 Project Overview
