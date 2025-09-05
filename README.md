@@ -1,47 +1,230 @@
-# AI Knowledge Search
+# AI Knowledge Search & Enrichment Platform
 
 An AI-powered knowledge base search application that allows users to upload documents, search them using natural language, and get AI-generated answers with confidence scoring and enrichment suggestions.
 
-## Features
+## Deployment Link and Video Demo
 
-- **Document Upload**: Support for PDF, DOCX, DOC, and TXT files
-- **AI-Powered Search**: Natural language search using OpenAI embeddings
-- **Confidence Scoring**: Visual indicators for answer confidence and completeness
-- **Enrichment Suggestions**: AI suggests ways to improve the knowledge base
-- **User Authentication**: Secure login/signup with MongoDB
-- **Document Management**: Upload, view, and delete documents
-- **Source Citations**: See which documents contributed to each answer
+- [Live App]()
+- [Video Demo Link](https://www.loom.com/share/89f879d537ce450a8575dfe9a36678b9?sid=457cbf63-a13e-4341-ac02-40a3d877d350)
 
-## Tech Stack
+## 🎯 Project Overview
 
-- **Frontend**: Next.js 14, TypeScript, Tailwind CSS
-- **Backend**: Next.js API Routes
-- **Database**: MongoDB
-- **Storage**: AWS S3
-- **Vector Database**: Pinecone
-- **AI**: OpenAI (GPT-4, text-embedding-3-small)
-- **Authentication**: JWT with HTTP-only cookies
+This application implements a complete RAG (Retrieval-Augmented Generation) system that enables users to:
+- Upload and manage documents (PDF, DOCX, DOC, TXT)
+- Search documents using natural language queries
+- Receive AI-generated answers with confidence and completeness scoring
+- Get suggestions for enriching their knowledge base
+- Visualize answer quality through intuitive UI indicators
 
-## Setup Instructions
+## 🏗️ Architecture
 
-### 1. Prerequisites
+### High-Level Architecture
 
-- Node.js 18+ 
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │   Backend       │    │   External      │
+│   (Next.js)     │◄──►│   (API Routes)  │◄──►│   Services      │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+│                      │                      │
+├─ React Components    ├─ Authentication      ├─ OpenAI API
+├─ Tailwind CSS       ├─ Document Processing ├─ Pinecone Vector DB
+├─ Context API        ├─ File Storage        ├─ AWS S3
+└─ TypeScript         └─ Database Layer      └─ MongoDB
+```
+
+### Data Flow Architecture
+
+```
+1. Document Upload Flow:
+   User → Frontend → API Route → S3 Storage
+                              → Document Parser → Text Extraction
+                              → OpenAI Embeddings → Pinecone Vector DB
+                              → MongoDB Metadata Storage
+
+2. Search Flow:
+   User Query → Frontend → API Route → OpenAI Embeddings
+                              → Pinecone Similarity Search
+                              → Context Retrieval → OpenAI GPT-4o
+                              → Answer Generation → Frontend Display
+```
+
+## 🛠️ Tech Stack
+
+### Frontend
+- **Next.js 15.5.2** - React framework with App Router
+- **React 19.1.0** - UI library with modern hooks
+- **TypeScript 5** - Type safety and development experience
+- **Tailwind CSS 3.4** - Utility-first CSS framework
+- **Heroicons** - Icon library for UI components
+- **Framer Motion** - Animation library
+- **React Dropzone** - File upload handling
+
+### Backend
+- **Next.js API Routes** - Serverless API endpoints
+- **MongoDB** - Document metadata storage
+- **Mongoose 8.18** - MongoDB object modeling
+- **JWT** - Authentication tokens
+- **bcryptjs** - Password hashing
+
+### AI & ML Services
+- **OpenAI GPT-4o** - Answer generation and reasoning
+- **OpenAI text-embedding-3-small** - Text vectorization (512 dimensions)
+- **Pinecone** - Vector similarity search and storage
+
+### File Processing
+- **pdf2json** - PDF text extraction (Next.js compatible)
+- **mammoth** - Microsoft Word document parsing
+- **AWS S3** - File storage and retrieval
+
+### Infrastructure
+- **AWS S3** - Scalable file storage
+- **Pinecone** - Managed vector database
+- **MongoDB** - Document database
+
+## 📁 Project Structure
+
+```
+src/
+├── app/                          # Next.js App Router
+│   ├── api/                      # API Routes
+│   │   ├── auth/                 # Authentication endpoints
+│   │   │   ├── login/route.ts
+│   │   │   ├── register/route.ts
+│   │   │   ├── logout/route.ts
+│   │   │   └── me/route.ts
+│   │   ├── documents/            # Document management
+│   │   │   ├── route.ts          # GET documents
+│   │   │   ├── upload/route.ts   # POST upload
+│   │   │   └── [id]/route.ts     # DELETE document
+│   │   └── search/route.ts       # Search endpoint
+│   ├── knowledge/                # Knowledge management page
+│   ├── globals.css              # Global styles
+│   ├── layout.tsx               # Root layout
+│   └── page.tsx                 # Home page
+├── components/                   # React components
+│   ├── ConfidenceIndicator.tsx  # Confidence scoring UI
+│   ├── DocumentList.tsx         # Document management UI
+│   ├── DocumentUpload.tsx       # File upload component
+│   ├── LoginForm.tsx            # Authentication form
+│   ├── Navbar.tsx               # Navigation component
+│   ├── RegisterForm.tsx         # Registration form
+│   └── SearchInterface.tsx      # Main search UI
+├── contexts/                     # React contexts
+│   └── AuthContext.tsx          # Authentication state
+├── lib/                         # Utility libraries
+│   ├── auth.ts                  # Authentication utilities
+│   ├── documentParser.ts        # Document processing
+│   ├── mongodb.ts               # Database connection
+│   ├── openai.ts                # AI service integration
+│   ├── pinecone.ts              # Vector database operations
+│   └── s3.ts                    # File storage operations
+├── models/                      # Database models
+│   ├── Document.ts              # Document schema
+│   └── User.ts                  # User schema
+└── types/                       # TypeScript definitions
+    └── global.d.ts              # Global type declarations
+```
+
+## 🔧 Core Features Implementation
+
+### 1. Document Processing Pipeline
+
+**Multi-format Support:**
+- **PDF**: Uses `pdf2json` for reliable text extraction
+- **Word Documents**: Uses `mammoth` for DOCX/DOC parsing
+- **Text Files**: Direct UTF-8 parsing
+
+**Text Chunking Strategy:**
+```typescript
+// Intelligent chunking based on token estimation
+export const chunkText = (text: string, maxTokens: number = 8000): string[] => {
+  // 1. Estimate tokens (4 chars per token)
+  // 2. Split on sentence boundaries
+  // 3. Handle oversized sentences by word splitting
+  // 4. Preserve semantic coherence
+}
+```
+
+### 2. Vector Embeddings & Storage
+
+**Embedding Generation:**
+- Model: `text-embedding-3-small`
+- Dimensions: 512 (configurable)
+- Chunking: Intelligent text segmentation
+- Storage: Pinecone vector database
+
+**Vector Search:**
+- Similarity search with user filtering
+- Configurable top-K results
+- Metadata preservation for source tracking
+
+### 3. AI-Powered Answer Generation
+
+**Sophisticated Prompting:**
+```typescript
+const systemPrompt = `You are an AI assistant that provides accurate answers based on the provided context. 
+You should also assess the completeness of your answer and suggest ways to improve the knowledge base.
+
+Please provide:
+1. A comprehensive answer to the query
+2. A confidence score (0-100) based on how well the context supports your answer
+3. A completeness score (0-100) based on how complete the information is
+4. Specific suggestions for additional documents or information that would improve the answer`;
+```
+
+**Response Structure:**
+- Answer generation with GPT-4
+- Confidence scoring (0-100)
+- Completeness assessment (0-100)
+- Enrichment suggestions
+- Source citations with relevance scores
+
+### 4. User Interface Design
+
+**Minimalistic Purple Aesthetic:**
+- Primary color: Purple (#8b5cf6)
+- Clean, modern design
+- Responsive layout
+- Intuitive user experience
+
+**Key UI Components:**
+- **SearchInterface**: Perplexity-like search experience
+- **ConfidenceIndicator**: Visual confidence/completeness scoring
+- **DocumentUpload**: Drag-and-drop file upload
+- **DocumentList**: Document management with delete functionality
+
+### 5. Authentication & Security
+
+**JWT-based Authentication:**
+- HTTP-only cookies for security
+- Password hashing with bcryptjs
+- User session management
+- Protected API routes
+
+**User Isolation:**
+- Each user has separate document collections
+- Vector search filtered by user ID
+- Secure file storage with user-specific paths
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 18+
 - MongoDB (local or cloud)
 - AWS S3 bucket
 - Pinecone account
 - OpenAI API key
 
-### 2. Environment Variables
+### Environment Setup
 
-Create a `.env.local` file in the root directory:
-
+Create `.env.local`:
 ```env
 # MongoDB
 MONGODB_URI=mongodb://localhost:27017/ai-knowledge-search
 
 # JWT
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+JWT_SECRET=your-super-secret-jwt-key
 
 # AWS S3
 AWS_ACCESS_KEY_ID=your-aws-access-key
@@ -55,114 +238,68 @@ PINECONE_ENVIRONMENT=your-pinecone-environment
 
 # OpenAI
 OPENAI_API_KEY=your-openai-api-key
-
-# Next.js
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your-nextauth-secret
 ```
 
-### 3. Install Dependencies
+### Installation
 
 ```bash
+# Install dependencies
 npm install
-```
 
-### 4. Set up Pinecone
+# Set up Pinecone index
+# Create index named 'knowledge-search' with 512 dimensions
 
-1. Create a Pinecone account at [pinecone.io](https://pinecone.io)
-2. Create a new index named `ai-knowledge-search`
-3. Set the dimensions to `1536` (for text-embedding-3-small)
-4. Use the `cosine` metric
-
-### 5. Set up AWS S3
-
-1. Create an S3 bucket
-2. Configure CORS policy for your domain
-3. Create IAM user with S3 permissions
-4. Add the credentials to your `.env.local`
-
-### 6. Run the Application
-
-```bash
+# Run development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+## 📊 API Endpoints
 
-## Usage
-
-1. **Sign Up**: Create a new account or sign in
-2. **Upload Documents**: Go to the Knowledge page and upload PDF, DOCX, DOC, or TXT files
-3. **Search**: Use the main search interface to ask questions about your documents
-4. **View Results**: Get AI-generated answers with confidence scores and source citations
-5. **Improve Knowledge**: Follow the enrichment suggestions to improve your knowledge base
-
-## Architecture
-
-### Document Processing Flow
-
-1. User uploads a document
-2. Document is parsed (PDF via pdf-parse, Word via mammoth)
-3. Text is chunked into smaller pieces
-4. Each chunk is converted to embeddings using OpenAI
-5. Embeddings are stored in Pinecone with metadata
-6. Document metadata is stored in MongoDB
-
-### Search Flow
-
-1. User enters a search query
-2. Query is converted to embeddings
-3. Similar embeddings are retrieved from Pinecone
-4. Context is sent to OpenAI GPT-4 for answer generation
-5. AI assesses confidence and completeness
-6. Results are returned with sources and suggestions
-
-## API Endpoints
-
+### Authentication
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
 - `POST /api/auth/logout` - User logout
 - `GET /api/auth/me` - Get current user
+
+### Document Management
 - `POST /api/documents/upload` - Upload document
 - `GET /api/documents` - Get user's documents
 - `DELETE /api/documents/[id]` - Delete document
+
+### Search
 - `POST /api/search` - Search knowledge base
 
-## Customization
+## 🔍 Key Technical Decisions
 
-### UI Theme
+### 1. PDF Parsing Solution
+**Problem**: `pdf-parse` library had compatibility issues with Next.js
+**Solution**: Switched to `pdf2json` for reliable server-side PDF processing
 
-The application uses a purple color scheme. You can customize the colors in `src/app/globals.css`:
+### 2. Vector Dimension Management
+**Problem**: Mismatch between embedding dimensions and Pinecone index
+**Solution**: Configured OpenAI embeddings to generate 512-dimensional vectors
 
-- Primary purple: `#8b5cf6`
-- Light purple: `#a78bfa`
-- Dark purple: `#7c3aed`
+### 3. Text Chunking Strategy
+**Approach**: Token-based chunking with sentence boundary preservation
+**Benefits**: Maintains semantic coherence while respecting token limits
 
-### AI Model
+### 4. Confidence Scoring System
+**Implementation**: AI-generated confidence and completeness scores
+**Visualization**: Color-coded indicators (green/yellow/red)
 
-To use a different OpenAI model, update the model name in `src/lib/openai.ts`:
+## 🎨 UI/UX Features
 
-```typescript
-// For embeddings
-model: 'text-embedding-3-small'
+- **Responsive Design**: Works on desktop and mobile
+- **Loading States**: Visual feedback during processing
+- **Error Handling**: User-friendly error messages
+- **Progress Indicators**: Upload progress visualization
+- **Source Citations**: Transparent answer attribution
+- **Confidence Visualization**: Clear quality indicators
 
-// For chat completion
-model: 'gpt-4'
-```
+## 🔒 Security Features
 
-## Troubleshooting
-
-### Common Issues
-
-1. **MongoDB Connection**: Ensure MongoDB is running and the connection string is correct
-2. **S3 Upload**: Check AWS credentials and bucket permissions
-3. **Pinecone**: Verify API key and index configuration
-4. **OpenAI**: Ensure API key is valid and has sufficient credits
-
-### Debug Mode
-
-Set `NODE_ENV=development` to enable detailed error logging.
-
-## License
-
-MIT License - see LICENSE file for details.
+- **JWT Authentication**: Secure session management
+- **Password Hashing**: bcryptjs with salt rounds
+- **User Isolation**: Separate data per user
+- **Input Validation**: Server-side validation
+- **File Type Restrictions**: Only allowed document types
